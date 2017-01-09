@@ -1,2 +1,42 @@
 ---
 # tasks file for apache-mod-macro
+
+  - name: Install apache modes
+    apt:
+      name: "{{ item }}"
+      state: installed
+      update_cache: yes
+      cache_valid_time: 3600
+    with_items:
+      - libapache2-mod-macro
+      - libapache-mod-security
+
+  - name: Check if apache is installed
+    stat:
+      path: /usr/sbin/apache2
+    register: apache_mod_macro_apache_stat
+
+  - name: Enable apache mode macro
+    apache2_module:
+      name: macro
+      state: present
+    notify: restart apache
+    when: apache_mod_macro_apache_stat.stat.exists == True
+
+  - name: Copy apache macro log
+    copy:
+      src: files/etc/apache2/conf.d/macro-log
+      dest: /etc/apache2/conf.d/macro-log
+      owner: root
+      group: root
+      mode: 0644
+      backup: no
+
+  - name: Copy apache macro ssl
+    copy:
+      src: files/etc/apache2/conf.d/macro-ssl
+      dest: /etc/apache2/conf.d/macro-ssl
+      owner: root
+      group: root
+      mode: 0644
+      backup: no

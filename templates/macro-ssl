@@ -1,0 +1,6 @@
+<Macro SSLLetsEncrypt $domain_name>
+    SSLEngine on
+    SSLCertificateFile      /etc/ssl/private/$domain_name/cert.pem
+    SSLCertificateKeyFile   /etc/ssl/private/$domain_name/privkey.pem
+    SSLCertificateChainFile /etc/ssl/private/$domain_name/chain.pem
+</Macro>

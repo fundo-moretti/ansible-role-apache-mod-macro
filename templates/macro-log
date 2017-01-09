@@ -1,0 +1,52 @@
+# mod macro
+# Install:
+# $ sudo apt-get install libapache2-mod-macro
+# $ sudo a2enmod macro
+# $ sudo service apache2 restart
+
+# Logfiles
+<Macro Logfiles $sitename>
+    # @param $sitename virtual host name
+    #
+    # Sample usage:
+    # Use Logfiles www.example.com
+
+    # Possible values include: debug, info, notice, warn, error, crit, alert, emerg.
+    LogLevel warn
+    CustomLog /var/log/apache2/$sitename.access.log combined
+    ErrorLog  /var/log/apache2/$sitename.error.log
+</Macro>
+
+# For debugging purposes
+<Macro DebugAudit $sitename $filter_param>
+    # @param $sitename     virtual host name
+    # @param $filter_param GET/POST parameter key name to be ignored in log file
+    #
+    # Sample usage:
+    # Use DebugAudit www.example.com login_password
+    # (parameter value of login_password will not be written in log file)
+    # NOTE: muliple parameters can be spcified using pipes:
+    # Use DebugAudit www.example.com login_password|user_password|secret_parameter
+
+    <IfModule security2_module>
+        # For debugging purposes only
+        # Ref: https://www.technovelty.org/web/logging-post-requests-with-apache.html
+        # 
+        # Install: 
+        # $ sudo apt-get install libapache-mod-security
+        # $ sudo a2enmod mod-security
+        # $ sudo service apache2 restart
+        SecRuleEngine On
+        SecAuditEngine on
+        SecAuditLogType Serial
+        SecAuditLog "|/bin/sed -u -r s/'(\\\?|&)($filter_param)=[^& \\\t\\\n]*'/'\\\1\\\2=******'/g >> /var/log/apache2/$sitename.audit.log"
+
+        SecRequestBodyAccess on
+        SecAuditLogParts ABIFHZ
+
+        SecDefaultAction "nolog,noauditlog,allow,phase:2"
+
+        SecRule REQUEST_METHOD "^POST$" "chain,allow,phase:2"
+        SecRule REQUEST_URI ".*" "auditlog"
+    </IfModule>
+</Macro>
